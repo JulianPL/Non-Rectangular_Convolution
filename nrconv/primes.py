@@ -39,7 +39,7 @@ def create_ntt_prime(list1, list2):
     """Creates a suitable prime for the NTT.
 
     The prime is of the form m*2^k + 1, where 2^k is the length of the NTT.
-    Furthermore, the prime is guaranteed to big enough in order to
+    Furthermore, the prime is guaranteed to be big enough in order to
     prevent overflows in the NTT.
     """
 
