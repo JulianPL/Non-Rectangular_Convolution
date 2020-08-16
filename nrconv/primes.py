@@ -2,6 +2,8 @@
 """A module to create suitable primes for the NTT.
 """
 
+from typing import List
+
 import sympy
 
 
@@ -13,7 +15,7 @@ def create_power_of_two(number: int) -> int:
     return power
 
 
-def create_mod_prime(base, mod, min_prime=0):
+def create_mod_prime(base: int, mod: int, min_prime: int = 0) -> int:
     """Creates a prime >= min_prime with prime % base == mod
 
     The algorithm is deterministic.  In the worst case, at most
@@ -35,7 +37,7 @@ def create_mod_prime(base, mod, min_prime=0):
     return prime_candidate
 
 
-def create_ntt_prime(list1, list2):
+def create_ntt_prime(list1: List[int], list2: List[int]) -> int:
     """Creates a suitable prime for the NTT.
 
     The prime is of the form m*2^k + 1, where 2^k is the length of the NTT.
