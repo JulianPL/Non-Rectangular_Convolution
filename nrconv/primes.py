@@ -16,10 +16,7 @@ def create_power_of_two(number: int) -> int:
 
 
 def create_mod_prime(base: int, mod: int, min_prime: int = 0) -> int:
-    """Creates a prime >= min_prime with prime % base == mod
-
-    The algorithm is deterministic.  In the worst case, at most
-    ((max*log(max))^2)/len(list) numbers need to be tested.
+    """Creates a prime >= min_prime with prime % base == mod.
 
     This algorithm might be improvable with an adapted sieve
     of Eratosthenes:  For details see the appendix of:
@@ -42,7 +39,7 @@ def create_ntt_prime(list1: List[int], list2: List[int]) -> int:
 
     The prime is of the form m*2^k + 1, where 2^k is the length of the NTT.
     Furthermore, the prime is guaranteed to be big enough in order to
-    prevent overflows in the NTT.
+    prevent underflows and overflows in the NTT.
     """
 
     ntt_length = 2 * create_power_of_two(max(len(list1), len(list2)))

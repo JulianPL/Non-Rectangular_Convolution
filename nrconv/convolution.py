@@ -9,12 +9,11 @@ import sympy
 from math import ceil, floor
 
 
-# Convolution with an axis-aligned rectangle as base geometry.
-# All edges are included.
 def non_rectangular_convolution_rectangle(list1: List[int], list2: List[int],
                                           geometry: List[Tuple[float, float]],
                                           ntt_prime: int):
     """Non-Rectangular Convolution -- Base Case: axis-aligned Rectangle.
+    All edges are included.
     
     Args:
         list1 (List[int]): The first list.
