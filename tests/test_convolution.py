@@ -287,7 +287,7 @@ class TestAxisAlignedTriangleCase(unittest.TestCase):
         want = 7
         self.assertEqual(result, want)
 
-    def test_non_rectangular_convolution_triangle_axis_aligned_big(self):
+    def test_non_rectangular_convolution_triangle_axis_aligned_large(self):
         list1 = [0, 1, 2, 3, 4, 5, 6, 7]
         list2 = [0, 1, 2, 3, 4, 5, 6, 7]
         geometry = [(Fraction(0, 1), Fraction(0, 1)),
@@ -310,6 +310,164 @@ class TestAxisAlignedTriangleCase(unittest.TestCase):
         _, result = nrconv.convolution.non_rectangular_convolution_triangle_axis_aligned(
             list1, list2, geometry, prime)
         want = 0
+        self.assertEqual(result, want)
+
+
+class TestAxisArbitraryTriangleCase(unittest.TestCase):
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_1_1_1(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)),
+                    (Fraction(4, 1), Fraction(2, 1)),
+                    (Fraction(6, 1), Fraction(6, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [1, 0, 1, 1, 1, 1, 2, 1, 1, 1, 1, 0, 1]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_1_1_2(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)),
+                    (Fraction(2, 1), Fraction(4, 1)),
+                    (Fraction(6, 1), Fraction(6, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [1, 0, 1, 1, 1, 1, 2, 1, 1, 1, 1, 0, 1]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_1_2_1(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(6, 1)),
+                    (Fraction(4, 1), Fraction(4, 1)),
+                    (Fraction(6, 1), Fraction(0, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [0, 0, 0, 0, 0, 0, 7, 4, 1, 0, 0, 0, 0]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_1_2_2(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(6, 1)),
+                    (Fraction(2, 1), Fraction(2, 1)),
+                    (Fraction(6, 1), Fraction(0, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [0, 0, 0, 0, 1, 4, 7, 0, 0, 0, 0, 0, 0]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_1_2_1(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)),
+                    (Fraction(3, 1), Fraction(6, 1)),
+                    (Fraction(6, 1), Fraction(0, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [1, 1, 2, 3, 3, 4, 5, 3, 2, 1, 0, 0, 0]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_1_2_2(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(6, 1)),
+                    (Fraction(3, 1), Fraction(0, 1)),
+                    (Fraction(6, 1), Fraction(6, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [0, 0, 0, 1, 2, 3, 5, 4, 3, 3, 2, 1, 1]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_1_1_1(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)),
+                    (Fraction(6, 1), Fraction(3, 1)),
+                    (Fraction(0, 1), Fraction(6, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [1, 1, 2, 3, 3, 4, 5, 3, 2, 1, 0, 0, 0]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_1_1_2(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(6, 1), Fraction(0, 1)),
+                    (Fraction(0, 1), Fraction(3, 1)),
+                    (Fraction(6, 1), Fraction(6, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [0, 0, 0, 1, 2, 3, 5, 4, 3, 3, 2, 1, 1]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_2_1(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)),
+                    (Fraction(6, 1), Fraction(3, 1)),
+                    (Fraction(3, 1), Fraction(6, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 0, 0]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_2_2(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)),
+                    (Fraction(3, 1), Fraction(6, 1)),
+                    (Fraction(6, 1), Fraction(3, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [1, 0, 1, 2, 1, 2, 3, 2, 3, 4, 0, 0, 0]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_2_3(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(6, 1), Fraction(6, 1)),
+                    (Fraction(0, 1), Fraction(3, 1)),
+                    (Fraction(3, 1), Fraction(0, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [0, 0, 0, 4, 3, 2, 3, 2, 1, 2, 1, 0, 1]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_triangle_axis_aligned_case_2_2_4(
+            self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(6, 1), Fraction(6, 1)),
+                    (Fraction(3, 1), Fraction(0, 1)),
+                    (Fraction(0, 1), Fraction(3, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_triangle(
+            list1, list2, geometry, prime)
+        want = [0, 0, 0, 4, 3, 2, 3, 2, 1, 2, 1, 0, 1]
         self.assertEqual(result, want)
 
 
