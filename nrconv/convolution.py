@@ -17,7 +17,7 @@ def is_integer(number: float) -> bool:
 def non_rectangular_convolution_edge(list1: List[int], list2: List[int],
                                      geometry: List[Tuple[float, float]],
                                      ntt_prime: int) -> Tuple[List[int], int]:
-    """Non-Rectangular Convolution -- Base Case 1: single Edges.
+    """Non-Rectangular Convolution -- Base Case 1: Single edges.
     
     Args:
         list1 (List[int]): The first list.
@@ -80,7 +80,7 @@ def non_rectangular_convolution_rectangle(
         list1: List[int], list2: List[int], geometry: List[Tuple[float,
                                                                  float]],
         ntt_prime: int) -> Tuple[List[int], int]:
-    """Non-Rectangular Convolution -- Base Case 2: axis-aligned Rectangles.
+    """Non-Rectangular Convolution -- Base Case 2: Axis-aligned rectangles.
     All edges are included.
     
     Args:
@@ -117,7 +117,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
         list1: List[int], list2: List[int], geometry: List[Tuple[float,
                                                                  float]],
         ntt_prime: int) -> Tuple[List[int], int]:
-    """Non-Rectangular Convolution -- Base Case 3: axis-aligned Triangles.
+    """Non-Rectangular Convolution -- Base Case 3: Axis-aligned triangles.
     All edges are included.
     
     Args:
@@ -175,7 +175,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
     conv_size = conv_max - conv_min + 1
     conv = [0] * conv_size
 
-    # add rectangle.
+    # Add rectangle.
     conv_rectangle, conv_rectangle_min = non_rectangular_convolution_rectangle(
         list1, list2, ((x_cathetus, y_cathetus), (x_average, y_average)),
         ntt_prime)
@@ -183,7 +183,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
         conv[conv_rectangle_min - conv_min +
              index] = conv[conv_rectangle_min - conv_min + index] + value
 
-    # add first triangle.
+    # Add first triangle.
     conv_triangle1, conv_triangle1_min = non_rectangular_convolution_triangle_axis_aligned(
         list1, list2, ((x_average, y_average), (x_cathetus, y_average),
                        (x_cathetus, y_not_cathetus)), ntt_prime)
@@ -191,7 +191,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
         conv[conv_triangle1_min - conv_min +
              index] = conv[conv_triangle1_min - conv_min + index] + value
 
-    # subtract edge between rectangle and first triangle, which was counted twice.
+    # Subtract edge between rectangle and first triangle, which was counted twice.
     conv_edge1, conv_edge1_min = non_rectangular_convolution_edge(
         list1, list2, ((x_average, y_cathetus), (x_average, y_average)),
         ntt_prime)
@@ -199,7 +199,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
         conv[conv_edge1_min - conv_min +
              index] = conv[conv_edge1_min - conv_min + index] - value
 
-    # add second triangle.
+    # Add second triangle.
     conv_triangle2, conv_triangle2_min = non_rectangular_convolution_triangle_axis_aligned(
         list1, list2, ((x_average, y_average), (x_average, y_cathetus),
                        (x_not_cathetus, y_cathetus)), ntt_prime)
@@ -207,7 +207,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
         conv[conv_triangle2_min - conv_min +
              index] = conv[conv_triangle2_min - conv_min + index] + value
 
-    # subtract edge between rectangle and second triangle, which was counted twice.
+    # Subtract edge between rectangle and second triangle, which was counted twice.
     conv_edge2, conv_edge2_min = non_rectangular_convolution_edge(
         list1, list2, ((x_cathetus, y_average), (x_average, y_average)),
         ntt_prime)
@@ -248,7 +248,7 @@ def non_rectangular_convolution_triangle(
     x_max = max(A[0], B[0], C[0])
     y_max = max(A[1], B[1], C[1])
 
-    # Case 0.1: degenerated triangle:
+    # Case 0.1: Degenerated triangle:
     if (x_min == x_max) or (y_min == y_max):
         return non_rectangular_convolution_edge(list1, list2, ((x_min, y_min),
                                                                (x_max, y_max)),
@@ -271,13 +271,13 @@ def non_rectangular_convolution_triangle(
         if not collision:
             vertex_non_collisions.append(vertex)
 
-    # Case 0.2: axis-aligned triangle:
+    # Case 0.2: Axis-aligned triangle:
     if len(vertex_collisions) == 3:
         return non_rectangular_convolution_triangle_axis_aligned(
             list1, list2, geometry, ntt_prime)
 
     if len(vertex_collisions) == 2:
-        # Lemma 12, Case 1: two vertices are on opposing vertices of the surrounding rectangle.
+        # Lemma 12, Case 1: Two vertices are on opposing vertices of the surrounding rectangle.
         if (vertex_collisions[0][0] != vertex_collisions[1][0]) and (
                 vertex_collisions[0][1] != vertex_collisions[1][1]):
             # Case 1.1: x_min/y_min -- x_max/y_max.
@@ -285,7 +285,7 @@ def non_rectangular_convolution_triangle(
                     and y_min == vertex_collisions[0][1]) or (
                         x_max == vertex_collisions[0][0]
                         and y_max == vertex_collisions[0][1]):
-                # Case 1.1.1: third vertex in the bottom right.
+                # Case 1.1.1: Third vertex in the bottom right.
                 if (abs(vertex_non_collisions[0][0] - x_min) /
                     (x_max - x_min)) + (
                         abs(vertex_non_collisions[0][1] - y_max) /
@@ -314,7 +314,7 @@ def non_rectangular_convolution_triangle(
                     conv_edge3, conv_edge3_min = non_rectangular_convolution_edge(
                         list1, list2, ((x_min, y_min), (x_max, y_max)),
                         ntt_prime)
-                # Case 1.1.2: third vertex in the top left.
+                # Case 1.1.2: Third vertex in the top left.
                 else:
                     conv_rectangle, conv_rectangle_min = non_rectangular_convolution_rectangle(
                         list1, list2,
@@ -345,7 +345,7 @@ def non_rectangular_convolution_triangle(
                     and y_max == vertex_collisions[0][1]) or (
                         x_max == vertex_collisions[0][0]
                         and y_min == vertex_collisions[0][1]):
-                # Case 1.2.1: third vertex in the top right.
+                # Case 1.2.1: Third vertex in the top right.
                 if (abs(vertex_non_collisions[0][0] - x_min) /
                     (x_max - x_min)) + (
                         abs(vertex_non_collisions[0][1] - y_min) /
@@ -374,7 +374,7 @@ def non_rectangular_convolution_triangle(
                     conv_edge3, conv_edge3_min = non_rectangular_convolution_edge(
                         list1, list2, ((x_min, y_max), (x_max, y_min)),
                         ntt_prime)
-                # Case 1.2.2: third vertex in the bottom left.
+                # Case 1.2.2: Third vertex in the bottom left.
                 else:
                     conv_rectangle, conv_rectangle_min = non_rectangular_convolution_rectangle(
                         list1, list2,
@@ -402,45 +402,45 @@ def non_rectangular_convolution_triangle(
                         ntt_prime)
 
             # Summing the convolutions for Case 1:
-            # add rectangle.
+            # Add rectangle.
             for index, value in enumerate(conv_rectangle):
                 conv[conv_rectangle_min - conv_min +
                      index] = conv[conv_rectangle_min - conv_min +
                                    index] + value
-            # add first triangle.
+            # Add first triangle.
             for index, value in enumerate(conv_triangle1):
                 conv[conv_triangle1_min - conv_min +
                      index] = conv[conv_triangle1_min - conv_min +
                                    index] + value
-            # subtract edge between rectangle and first triangle, which was counted twice.
+            # Subtract edge between rectangle and first triangle, which was counted twice.
             for index, value in enumerate(conv_edge1):
                 conv[conv_edge1_min - conv_min +
                      index] = conv[conv_edge1_min - conv_min + index] - value
-            # add second triangle.
+            # Add second triangle.
             for index, value in enumerate(conv_triangle2):
                 conv[conv_triangle2_min - conv_min +
                      index] = conv[conv_triangle2_min - conv_min +
                                    index] + value
-            # subtract edge between rectangle and second triangle, which was counted twice.
+            # Subtract edge between rectangle and second triangle, which was counted twice.
             for index, value in enumerate(conv_edge2):
                 conv[conv_edge2_min - conv_min +
                      index] = conv[conv_edge2_min - conv_min + index] - value
-            # subtract third triangle.
+            # Subtract third triangle.
             for index, value in enumerate(conv_triangle3):
                 conv[conv_triangle3_min - conv_min +
                      index] = conv[conv_triangle3_min - conv_min +
                                    index] - value
-            # add hypothenuse of the third triangle, which was wrongly subtracted.
+            # Add hypothenuse of the third triangle, which was wrongly subtracted.
             for index, value in enumerate(conv_edge3):
                 conv[conv_edge3_min - conv_min +
                      index] = conv[conv_edge3_min - conv_min + index] + value
             return conv, conv_min
 
-        # Case 2.1: two vertices are on the same edge of the surrounding rectangle.
+        # Case 2.1: Two vertices are on the same edge of the surrounding rectangle.
         else:
             conv_rectangle, conv_rectangle_min = non_rectangular_convolution_rectangle(
                 list1, list2, ((x_min, y_min), (x_max, y_max)), ntt_prime)
-            # Case 2.1.1 vertical edge.
+            # Case 2.1.1: Vertical edge.
             if vertex_collisions[0][0] == vertex_collisions[1][0]:
                 conv_triangle1, conv_triangle1_min = non_rectangular_convolution_triangle_axis_aligned(
                     list1, list2,
@@ -458,7 +458,7 @@ def non_rectangular_convolution_triangle(
                     list1, list2,
                     ((x_min + x_max - vertex_non_collisions[0][0], y_max),
                      vertex_non_collisions[0]), ntt_prime)
-            # Case 2.1.2 horizontal edge.
+            # Case 2.1.2: Horizontal edge.
             else:
                 conv_triangle1, conv_triangle1_min = non_rectangular_convolution_triangle_axis_aligned(
                     list1, list2,
@@ -478,32 +478,32 @@ def non_rectangular_convolution_triangle(
                      vertex_non_collisions[0]), ntt_prime)
 
             # Summing the convolutions for Case 2.1:
-            # add rectangle.
+            # Add rectangle.
             for index, value in enumerate(conv_rectangle):
                 conv[conv_rectangle_min - conv_min +
                      index] = conv[conv_rectangle_min - conv_min +
                                    index] + value
-            # subtract first triangle.
+            # Subtract first triangle.
             for index, value in enumerate(conv_triangle1):
                 conv[conv_triangle1_min - conv_min +
                      index] = conv[conv_triangle1_min - conv_min +
                                    index] - value
-            # add edge between given triange and first triangle, which was wrongly subtracted.
+            # Add edge between given triange and first triangle, which was wrongly subtracted.
             for index, value in enumerate(conv_edge1):
                 conv[conv_edge1_min - conv_min +
                      index] = conv[conv_edge1_min - conv_min + index] + value
-            # subtract second triangle.
+            # Subtract second triangle.
             for index, value in enumerate(conv_triangle2):
                 conv[conv_triangle2_min - conv_min +
                      index] = conv[conv_triangle2_min - conv_min +
                                    index] - value
-            # add edge between given triange and second triangle, which was wrongly subtracted.
+            # Add edge between given triange and second triangle, which was wrongly subtracted.
             for index, value in enumerate(conv_edge2):
                 conv[conv_edge2_min - conv_min +
                      index] = conv[conv_edge2_min - conv_min + index] + value
             return conv, conv_min
 
-    # Case 2.2: only one vertex of the triangle coincides with the surrounding rectangle.
+    # Case 2.2: Only one vertex of the triangle coincides with the surrounding rectangle.
     # Switch non_collision-vertices such that the first is horizontally opposed to verex_collisions.
     if (vertex_non_collisions[0][0] !=
             x_max + x_min - vertex_collisions[0][0]):
@@ -537,31 +537,31 @@ def non_rectangular_convolution_triangle(
         ntt_prime)
 
     # Summing the convolutions for Case 2.2:
-    # add rectangle.
+    # Add rectangle.
     for index, value in enumerate(conv_rectangle):
         conv[conv_rectangle_min - conv_min +
              index] = conv[conv_rectangle_min - conv_min + index] + value
-    # subtract first triangle.
+    # Subtract first triangle.
     for index, value in enumerate(conv_triangle1):
         conv[conv_triangle1_min - conv_min +
              index] = conv[conv_triangle1_min - conv_min + index] - value
-    # add edge between given triange and first triangle, which was wrongly subtracted.
+    # Add edge between given triange and first triangle, which was wrongly subtracted.
     for index, value in enumerate(conv_edge1):
         conv[conv_edge1_min - conv_min +
              index] = conv[conv_edge1_min - conv_min + index] + value
-    # subtract second triangle.
+    # Subtract second triangle.
     for index, value in enumerate(conv_triangle2):
         conv[conv_triangle2_min - conv_min +
              index] = conv[conv_triangle2_min - conv_min + index] - value
-    # add edge between given triange and second triangle, which was wrongly subtracted.
+    # Add edge between given triange and second triangle, which was wrongly subtracted.
     for index, value in enumerate(conv_edge2):
         conv[conv_edge2_min - conv_min +
              index] = conv[conv_edge2_min - conv_min + index] + value
-    # subtract third triangle.
+    # Subtract third triangle.
     for index, value in enumerate(conv_triangle3):
         conv[conv_triangle3_min - conv_min +
              index] = conv[conv_triangle3_min - conv_min + index] - value
-    # add edge between given triange and third triangle, which was wrongly subtracted.
+    # Add edge between given triange and third triangle, which was wrongly subtracted.
     for index, value in enumerate(conv_edge3):
         conv[conv_edge3_min - conv_min +
              index] = conv[conv_edge3_min - conv_min + index] + value
