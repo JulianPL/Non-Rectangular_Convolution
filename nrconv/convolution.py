@@ -566,3 +566,112 @@ def non_rectangular_convolution_triangle(
         conv[conv_edge3_min - conv_min +
              index] = conv[conv_edge3_min - conv_min + index] + value
     return conv, conv_min
+
+
+def non_rectangular_convolution_convex_polygon(
+        list1: List[int], list2: List[int], geometry: List[Tuple[float,
+                                                                 float]],
+        ntt_prime: int) -> Tuple[List[int], int]:
+    """Non-Rectangular Convolution -- Base Case 5: Arbitrary convex polygons.
+    All edges are included.
+    
+    Args:
+        list1 (List[int]): The first list.
+        list2 (List[int]): The second list.
+        geometry (List[Tuple[float, float]]): The vertices defining the
+            underlying polygon.
+        ntt_prime (int): The prime for the number theoretic transform.
+
+    Returns:
+        First, the convolution of the two lists with the given
+            base geometry as a list of integers.
+        
+        Second, the offset of the first index of the convolution.
+    """
+    number_vertices = len(geometry)
+
+    if number_vertices == 2:
+        return non_rectangular_convolution_edge(list1, list2, geometry,
+                                                ntt_prime)
+
+    if number_vertices == 3:
+        return non_rectangular_convolution_triangle(list1, list2, geometry,
+                                                    ntt_prime)
+
+    x_min = geometry[0][0]
+    y_min = geometry[0][1]
+    x_max = geometry[0][0]
+    y_max = geometry[0][1]
+    for _, vertex in enumerate(geometry):
+        if x_min > vertex[0]:
+            x_min = vertex[0]
+        if y_min > vertex[1]:
+            y_min = vertex[1]
+        if x_max < vertex[0]:
+            x_max = vertex[0]
+        if y_max < vertex[1]:
+            y_max = vertex[1]
+
+    conv_min = ceil(x_min) + ceil(y_min)
+    conv_max = floor(x_max) + floor(y_max)
+    conv_size = conv_max - conv_min + 1
+    conv = [0] * conv_size
+
+    if number_vertices == 4:
+        conv_triangle1, conv_triangle1_min = non_rectangular_convolution_triangle(
+            list1, list2, (geometry[0], geometry[1], geometry[2]), ntt_prime)
+        conv_triangle2, conv_triangle2_min = non_rectangular_convolution_triangle(
+            list1, list2, (geometry[2], geometry[3], geometry[0]), ntt_prime)
+        conv_edge1, conv_edge1_min = non_rectangular_convolution_edge(
+            list1, list2, (geometry[0], geometry[2]), ntt_prime)
+
+        # Add first triangle.
+        for index, value in enumerate(conv_triangle1):
+            conv[conv_triangle1_min - conv_min +
+                 index] = conv[conv_triangle1_min - conv_min + index] + value
+        # Add second triangle.
+        for index, value in enumerate(conv_triangle2):
+            conv[conv_triangle2_min - conv_min +
+                 index] = conv[conv_triangle2_min - conv_min + index] + value
+        # Subtract edge between the two triangles, which was counted twice.
+        for index, value in enumerate(conv_edge1):
+            conv[conv_edge1_min - conv_min +
+                 index] = conv[conv_edge1_min - conv_min + index] - value
+        return conv, conv_min
+
+    # Polygon v_{0} - v{2} - v{4} - v_{6} - ... - v_{2*floor(k/2)}:
+    conv_polygon, conv_polygon_min = non_rectangular_convolution_convex_polygon(
+        list1, list2, geometry[::2], ntt_prime)
+    for index, value in enumerate(conv_polygon):
+        conv[conv_polygon_min - conv_min +
+             index] = conv[conv_polygon_min - conv_min + index] + value
+    # Triangles v_{i} - v_{i+1} - v_{i+2} for all even i:
+    for index in range(0, number_vertices - 2, 2):
+        conv_triangle, conv_triangle_min = non_rectangular_convolution_triangle(
+            list1, list2,
+            (geometry[index], geometry[index + 1], geometry[index + 2]),
+            ntt_prime)
+        conv_edge, conv_edge_min = non_rectangular_convolution_edge(
+            list1, list2, (geometry[index], geometry[index + 2]), ntt_prime)
+        for index, value in enumerate(conv_triangle):
+            conv[conv_triangle_min - conv_min +
+                 index] = conv[conv_triangle_min - conv_min + index] + value
+        for index, value in enumerate(conv_edge):
+            conv[conv_edge_min - conv_min +
+                 index] = conv[conv_edge_min - conv_min + index] - value
+    # Triangle v_{k-1} - v_{k} - v_{0}:
+    if number_vertices % 2 == 0:
+        conv_triangle, conv_triangle_min = non_rectangular_convolution_triangle(
+            list1, list2, (geometry[number_vertices - 2],
+                           geometry[number_vertices - 1], geometry[0]),
+            ntt_prime)
+        conv_edge, conv_edge_min = non_rectangular_convolution_edge(
+            list1, list2, (geometry[number_vertices - 2], geometry[0]),
+            ntt_prime)
+        for index, value in enumerate(conv_triangle):
+            conv[conv_triangle_min - conv_min +
+                 index] = conv[conv_triangle_min - conv_min + index] + value
+        for index, value in enumerate(conv_edge):
+            conv[conv_edge_min - conv_min +
+                 index] = conv[conv_edge_min - conv_min + index] - value
+    return conv, conv_min
