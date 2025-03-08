@@ -71,13 +71,13 @@ class TestPrimesForNTT(unittest.TestCase):
         prime = nrconv.create_ntt_prime(list1, list2)
         self.assertTrue(sympy.ntheory.primetest.isprime(prime))
 
-    def test_create_ntt_prime_size(self):
+    def test_create_ntt_prime_size1(self):
         list1 = [14, 23, 63, 41, 12, 42, 75, 32, 21]
         list2 = [14, 23, 63, 41, 12, 42, 75, 32, 21]
         prime = nrconv.create_ntt_prime(list1, list2)
         self.assertGreaterEqual(prime, 15098 * 2 + 1)
 
-    def test_create_ntt_prime_size(self):
+    def test_create_ntt_prime_size2(self):
         list1 = [42, 42, 42, 42, 42, 42, 42, 42, 42]
         list2 = [42, 42, 42, 42, 42, 42, 42, 42, 42]
         prime = nrconv.create_ntt_prime(list1, list2)
