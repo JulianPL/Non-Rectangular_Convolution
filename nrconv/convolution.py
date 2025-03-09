@@ -3,11 +3,13 @@
 """
 
 from dataclasses import dataclass
-from math import ceil, floor
+from math import ceil
 from typing import List, Tuple, Callable
 from fractions import Fraction
 
 import sympy
+
+from nrconv.geometry import rectangle_inscribed_int, rectangle_inscribed, opposing_rect_vertex, closer_point
 
 Point = Tuple[Fraction, Fraction]
 
@@ -21,68 +23,15 @@ def is_integer(number: Fraction) -> bool:
     """Checks if number is an integer"""
     return number == ceil(number)
 
-def rectangle_inscribed_int(coordinates: List[Point]) -> Tuple[int, int, int, int]:
-    """Retrieves bounds for the minimal and maximal integer coordinates of the given polygon"""
-    x_min, y_min, x_max, y_max = rectangle_inscribed(coordinates)
-    return ceil(x_min), ceil(y_min), floor(x_max), floor(y_max)
-
-def rectangle_inscribed(coordinates: List[Point]) -> Tuple[Fraction, Fraction, Fraction, Fraction]:
-    """Retrieves bounds for the minimal and maximal coordinates of the given polygon"""
-    x_min = min(coordinate[0] for coordinate in coordinates)
-    y_min = min(coordinate[1] for coordinate in coordinates)
-    x_max = max(coordinate[0] for coordinate in coordinates)
-    y_max = max(coordinate[1] for coordinate in coordinates)
-    return x_min, y_min, x_max, y_max
-
 def retrieve_convolution_size(coordinates: List[Point]) -> Tuple[int, int]:
     """Retrieves bounds for the size and the starting index of the convolved sequence with given polygon"""
-    x_min, y_min, x_max, y_max = rectangle_inscribed_int(coordinates)
+    (x_min, y_min), (x_max, y_max) = rectangle_inscribed_int(coordinates)
     conv_min, conv_max = x_min + y_min, x_max + y_max
     if (x_min > x_max) or (y_min > y_max):
         conv_size = 0
     else:
         conv_size = conv_max - conv_min + 1
     return conv_size, conv_min
-
-def closer_point(reference: Point, option_a: Point, option_b: Point) -> Point:
-    """
-    Returns the point closer to the reference.
-
-    Args:
-        reference (Point): The reference point (X).
-        option_a (Point): First candidate point (Y).
-        option_b (Point): Second candidate point (Z).
-
-    Returns:
-        Point: The closer point (option_a or option_b).
-    """
-    a_squared_distance = sum((ref - a) ** 2 for ref, a in zip(reference, option_a))
-    b_squared_distance = sum((ref - b) ** 2 for ref, b in zip(reference, option_b))
-    return option_a if a_squared_distance <= b_squared_distance else option_b
-
-def opposing_rect_vertex(reference: Point, diag_start: Point, diag_end: Point) -> Point:
-    """Determines the opposite rectangle vertex relative to the reference point.
-
-    Given two diagonally opposite corners of an axis-aligned rectangle (`diag_start`, `diag_end`),
-    this function determines which of the remaining two rectangle vertices is on the opposing site
-    of the diagonal as the `reference` point.
-
-    Args:
-        reference (Point): The point to compare.
-        diag_start (Point): One of the diagonally opposite rectangle corners.
-        diag_end (Point): The other diagonally opposite rectangle corner.
-
-    Returns:
-        Point: The rectangle corner on the opposing side of the diagonal as `reference`.
-
-    Example:
-        >>> opposing_rect_vertex((Fraction(9, 1), Fraction(0, 1)), (Fraction(0, 1), Fraction(0, 1)), (Fraction(10, 1), Fraction(1, 1)))
-        (Fraction(0, 1), Fraction(1, 1))
-    """
-    other_a, other_b = (diag_end[0], diag_start[1]), (diag_start[0], diag_end[1])
-    weight_ax, weight_ay = abs(other_a[0] - diag_start[0]), abs(other_a[1] - diag_end[1])
-    part_ax, part_ay = abs(other_a[0] - reference[0]), abs(other_a[1] - reference[1])
-    return other_a if (part_ax / weight_ax) + (part_ay / weight_ay) > 1 else other_b
 
 def add_subslice(main: Tuple[List[int], int], sub: Tuple[List[int], int]) -> Tuple[List[int], int]:
     """Calculates the sum of two slices main and sub with offsets
@@ -162,13 +111,13 @@ def non_rectangular_convolution_edge(list1: List[int], list2: List[int],
     """
 
     start, end = geometry[0], geometry[1]
-    x_min, y_min, x_max, _ = rectangle_inscribed_int([start, end])
     conv_size, conv_min = retrieve_convolution_size([start, end])
 
     if conv_size == 0:
         return [], conv_min
 
     conv = [0] * conv_size
+    (x_min, y_min), (x_max, _) = rectangle_inscribed_int([start, end])
 
     # edge is vertical (since x_min and x_max are rounded, we have to use the actual x-coordinates)
     if start[0] == end[0]:
@@ -217,12 +166,12 @@ def non_rectangular_convolution_rectangle(
     """
 
     start, end = geometry[0], geometry[1]
-    x_min, y_min, x_max, y_max = rectangle_inscribed_int([start, end])
     conv_size, conv_min = retrieve_convolution_size([start, end])
 
     if conv_size == 0:
         return [], conv_min
 
+    (x_min, y_min), (x_max, y_max) = rectangle_inscribed_int([start, end])
     return sympy.discrete.convolutions.convolution_ntt(
         list1[x_min:x_max + 1], list2[y_min:y_max + 1],
         ntt_prime), conv_min
@@ -248,7 +197,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
     """
 
     A, B, C = geometry[0], geometry[1], geometry[2]
-    x_min, y_min, x_max, y_max = rectangle_inscribed([A, B, C])
+    (x_min, y_min), (x_max, y_max) = rectangle_inscribed([A, B, C])
     x_average, y_average = (x_min + x_max) / 2, (y_min + y_max) / 2
     conv_size, conv_min = retrieve_convolution_size([A, B, C])
 
@@ -331,7 +280,7 @@ def non_rectangular_convolution_triangle(
         Second, the offset of the first index of the convolution.
     """
     A, B, C = geometry[0], geometry[1], geometry[2]
-    x_min, y_min, x_max, y_max = rectangle_inscribed([A, B, C])
+    (x_min, y_min), (x_max, y_max) = rectangle_inscribed([A, B, C])
     conv_size, conv_min = retrieve_convolution_size([A, B, C])
 
     # Case 0.1: Degenerated triangle:
