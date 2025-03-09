@@ -5,10 +5,11 @@
 from dataclasses import dataclass
 from math import ceil, floor
 from typing import List, Tuple, Callable
+from fractions import Fraction
 
 import sympy
 
-Point = Tuple[float, float]
+Point = Tuple[Fraction, Fraction]
 
 @dataclass
 class ConvolutionStep:
@@ -16,7 +17,7 @@ class ConvolutionStep:
     function: Callable[[List[int], List[int], List[Point], int], Tuple[List[int], int]]
     is_positive: bool  # True for addition, False for subtraction
 
-def is_integer(number: float) -> bool:
+def is_integer(number: Fraction) -> bool:
     """Checks if number is an integer"""
     return number == ceil(number)
 
@@ -25,7 +26,7 @@ def rectangle_inscribed_int(coordinates: List[Point]) -> Tuple[int, int, int, in
     x_min, y_min, x_max, y_max = rectangle_inscribed(coordinates)
     return ceil(x_min), ceil(y_min), floor(x_max), floor(y_max)
 
-def rectangle_inscribed(coordinates: List[Point]) -> Tuple[float, float, float, float]:
+def rectangle_inscribed(coordinates: List[Point]) -> Tuple[Fraction, Fraction, Fraction, Fraction]:
     """Retrieves bounds for the minimal and maximal coordinates of the given polygon"""
     x_min = min(coordinate[0] for coordinate in coordinates)
     y_min = min(coordinate[1] for coordinate in coordinates)
@@ -75,8 +76,8 @@ def opposing_rect_vertex(reference: Point, diag_start: Point, diag_end: Point) -
         Point: The rectangle corner on the opposing side of the diagonal as `reference`.
 
     Example:
-        >>> opposing_rect_vertex((9, 0), (0, 0), (10, 1))
-        (0, 1)
+        >>> opposing_rect_vertex((Fraction(9, 1), Fraction(0, 1)), (Fraction(0, 1), Fraction(0, 1)), (Fraction(10, 1), Fraction(1, 1)))
+        (Fraction(0, 1), Fraction(1, 1))
     """
     other_a, other_b = (diag_end[0], diag_start[1]), (diag_start[0], diag_end[1])
     weight_ax, weight_ay = abs(other_a[0] - diag_start[0]), abs(other_a[1] - diag_end[1])
@@ -196,8 +197,7 @@ def non_rectangular_convolution_edge(list1: List[int], list2: List[int],
     return conv, conv_min
 
 def non_rectangular_convolution_rectangle(
-        list1: List[int], list2: List[int], geometry: List[Tuple[float,
-        float]],
+        list1: List[int], list2: List[int], geometry: List[Point],
         ntt_prime: int) -> Tuple[List[int], int]:
     """Non-Rectangular Convolution -- Base Case 2: Axis-aligned rectangles.
     All edges are included.
@@ -228,8 +228,7 @@ def non_rectangular_convolution_rectangle(
         ntt_prime), conv_min
 
 def non_rectangular_convolution_triangle_axis_aligned(
-        list1: List[int], list2: List[int], geometry: List[Tuple[float,
-        float]],
+        list1: List[int], list2: List[int], geometry: List[Point],
         ntt_prime: int) -> Tuple[List[int], int]:
     """Non-Rectangular Convolution -- Base Case 3: Axis-aligned triangles.
     All edges are included.
@@ -313,8 +312,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
     return conv, conv_min
 
 def non_rectangular_convolution_triangle(
-        list1: List[int], list2: List[int], geometry: List[Tuple[float,
-        float]],
+        list1: List[int], list2: List[int], geometry: List[Point],
         ntt_prime: int) -> Tuple[List[int], int]:
     """Non-Rectangular Convolution -- Base Case 4: arbitrary Triangles.
     All edges are included.
@@ -474,8 +472,7 @@ def non_rectangular_convolution_triangle(
     return conv, conv_min
 
 def non_rectangular_convolution_convex_polygon(
-        list1: List[int], list2: List[int], geometry: List[Tuple[float,
-        float]],
+        list1: List[int], list2: List[int], geometry: List[Point],
         ntt_prime: int) -> Tuple[List[int], int]:
     """Non-Rectangular Convolution -- Base Case 5: Arbitrary convex polygons.
     All edges are included.

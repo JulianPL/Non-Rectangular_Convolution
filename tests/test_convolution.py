@@ -6,14 +6,11 @@ import unittest
 
 import nrconv
 
-import sympy
-
-
 class TestEdgeCase(unittest.TestCase):
     def test_non_rectangular_convolution_edge_diagonal1(self):
         list1 = [1, 1, 1, 1, 1, 1, 1, 1]
         list2 = [1, 1, 1, 1, 1, 1, 1, 1]
-        geometry = [(0, 0), (7, 7)]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)), (Fraction(7, 1), Fraction(7, 1))]
         prime = nrconv.create_ntt_prime(list1, list2)
         result, _ = nrconv.convolution.non_rectangular_convolution_edge(
             list1, list2, geometry, prime)
@@ -80,7 +77,7 @@ class TestRectangleCase(unittest.TestCase):
     def test_non_rectangular_convolution_rectangle_full(self):
         list1 = [1, 1, 1, 1, 1, 1, 1, 1]
         list2 = [1, 1, 1, 1, 1, 1, 1, 1]
-        geometry = [(0, 0), (7, 7)]
+        geometry = [(Fraction(0, 1), Fraction(0, 1)), (Fraction(7, 1), Fraction(7, 1))]
         prime = nrconv.create_ntt_prime(list1, list2)
         result, _ = nrconv.convolution.non_rectangular_convolution_rectangle(
             list1, list2, geometry, prime)
@@ -90,7 +87,7 @@ class TestRectangleCase(unittest.TestCase):
     def test_non_rectangular_convolution_rectangle_int_part(self):
         list1 = [1, 1, 1, 1, 1, 1, 1, 1]
         list2 = [1, 1, 1, 1, 1, 1, 1, 1]
-        geometry = [(1, 2), (4, 6)]
+        geometry = [(Fraction(1, 1), Fraction(2, 1)), (Fraction(4, 1), Fraction(6, 1))]
         prime = nrconv.create_ntt_prime(list1, list2)
         result, _ = nrconv.convolution.non_rectangular_convolution_rectangle(
             list1, list2, geometry, prime)
@@ -111,7 +108,7 @@ class TestRectangleCase(unittest.TestCase):
     def test_non_rectangular_convolution_rectangle_int_dot(self):
         list1 = [1, 1, 3, 1, 1, 1, 1, 1]
         list2 = [1, 1, 1, 1, 1, 7, 1, 1]
-        geometry = [(2, 5), (2, 5)]
+        geometry = [(Fraction(2, 1), Fraction(5, 1)), (Fraction(2, 1), Fraction(5, 1))]
         prime = nrconv.create_ntt_prime(list1, list2)
         result, _ = nrconv.convolution.non_rectangular_convolution_rectangle(
             list1, list2, geometry, prime)
@@ -180,7 +177,7 @@ class TestAxisAlignedTriangleCase(unittest.TestCase):
             self):
         list1 = [1, 2, 3, 4, 5, 6, 7, 8]
         list2 = [1, 1, 1, 1, 1, 1, 1, 1]
-        geometry = [(4, 4), (4, 7), (4, 4)]
+        geometry = [(Fraction(4, 1), Fraction(4, 1)), (Fraction(4, 1), Fraction(7, 1)), (Fraction(4, 1), Fraction(4, 1))]
         prime = nrconv.create_ntt_prime(list1, list2)
         result, _ = nrconv.convolution.non_rectangular_convolution_triangle_axis_aligned(
             list1, list2, geometry, prime)
@@ -504,6 +501,28 @@ class TestAxisArbitraryConvexCase(unittest.TestCase):
         result, _ = nrconv.convolution.non_rectangular_convolution_convex_polygon(
             list1, list2, geometry, prime)
         want = [0, 0, 1, 4, 5, 4, 5, 6, 5, 4, 5, 4, 1, 0, 0]
+        self.assertEqual(result, want)
+
+    def test_non_rectangular_convolution_convex_polygon_13_edges(self):
+        list1 = [1, 1, 1, 1, 1, 1, 1, 1]
+        list2 = [1, 1, 1, 1, 1, 1, 1, 1]
+        geometry = [(Fraction(3, 1), Fraction(0, 1)),
+                    (Fraction(4, 1), Fraction(0, 1)),
+                    (Fraction(11, 2), Fraction(1, 1)),
+                    (Fraction(6, 1), Fraction(3, 2)),
+                    (Fraction(7, 1), Fraction(3, 1)),
+                    (Fraction(7, 1), Fraction(4, 1)),
+                    (Fraction(6, 1), Fraction(6, 1)),
+                    (Fraction(4, 1), Fraction(7, 1)),
+                    (Fraction(3, 1), Fraction(7, 1)),
+                    (Fraction(1, 1), Fraction(6, 1)),
+                    (Fraction(0, 1), Fraction(4, 1)),
+                    (Fraction(0, 1), Fraction(3, 1)),
+                    (Fraction(1, 1), Fraction(1, 1))]
+        prime = nrconv.create_ntt_prime(list1, list2)
+        result, _ = nrconv.convolution.non_rectangular_convolution_convex_polygon(
+            list1, list2, geometry, prime)
+        want = [0, 0, 1, 4, 5, 4, 5, 5, 5, 4, 5, 4, 1, 0, 0]
         self.assertEqual(result, want)
 
 
