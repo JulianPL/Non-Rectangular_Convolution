@@ -20,21 +20,18 @@ def is_integer(number: float) -> bool:
     """Checks if number is an integer"""
     return number == ceil(number)
 
-
 def rectangle_inscribed_int(coordinates: List[Point]) -> Tuple[int, int, int, int]:
     """Retrieves bounds for the minimal and maximal integer coordinates of the given polygon"""
     x_min, y_min, x_max, y_max = rectangle_inscribed(coordinates)
     return ceil(x_min), ceil(y_min), floor(x_max), floor(y_max)
 
-
 def rectangle_inscribed(coordinates: List[Point]) -> Tuple[float, float, float, float]:
     """Retrieves bounds for the minimal and maximal coordinates of the given polygon"""
-    x_min = min([coordinate[0] for coordinate in coordinates])
-    y_min = min([coordinate[1] for coordinate in coordinates])
-    x_max = max([coordinate[0] for coordinate in coordinates])
-    y_max = max([coordinate[1] for coordinate in coordinates])
+    x_min = min(coordinate[0] for coordinate in coordinates)
+    y_min = min(coordinate[1] for coordinate in coordinates)
+    x_max = max(coordinate[0] for coordinate in coordinates)
+    y_max = max(coordinate[1] for coordinate in coordinates)
     return x_min, y_min, x_max, y_max
-
 
 def retrieve_convolution_size(coordinates: List[Point]) -> Tuple[int, int]:
     """Retrieves bounds for the size and the starting index of the convolved sequence with given polygon"""
@@ -45,7 +42,6 @@ def retrieve_convolution_size(coordinates: List[Point]) -> Tuple[int, int]:
     else:
         conv_size = conv_max - conv_min + 1
     return conv_size, conv_min
-
 
 def closer_point(reference: Point, option_a: Point, option_b: Point) -> Point:
     """
@@ -62,7 +58,6 @@ def closer_point(reference: Point, option_a: Point, option_b: Point) -> Point:
     a_squared_distance = sum((ref - a) ** 2 for ref, a in zip(reference, option_a))
     b_squared_distance = sum((ref - b) ** 2 for ref, b in zip(reference, option_b))
     return option_a if a_squared_distance <= b_squared_distance else option_b
-
 
 def opposing_rect_vertex(reference: Point, diag_start: Point, diag_end: Point) -> Point:
     """Determines the opposite rectangle vertex relative to the reference point.
@@ -107,14 +102,12 @@ def add_subslice(main: Tuple[List[int], int], sub: Tuple[List[int], int]) -> Tup
         out[sub_start - main_start + index] += value
     return out, main_start
 
-
 def sub_subslice(main: Tuple[List[int], int], sub: Tuple[List[int], int]) -> Tuple[List[int], int]:
     """Calculates the difference of two slices main and sub with offsets
     such that the sub-indices being in main"""
 
     inverse = [-elm for elm in sub[0]], sub[1]
     return add_subslice(main, inverse)
-
 
 def add_convolution(
         list1: List[int], list2: List[int],
@@ -147,7 +140,6 @@ def add_convolution(
             conv, _ = sub_subslice((conv, conv_min), (conv_part, conv_part_min))
 
     return conv, conv_min
-
 
 def non_rectangular_convolution_edge(list1: List[int], list2: List[int],
                                      geometry: List[Point],
@@ -203,7 +195,6 @@ def non_rectangular_convolution_edge(list1: List[int], list2: List[int],
                 = conv[x_index + y_index - conv_min] + list1[x_index] * list2[y_index]
     return conv, conv_min
 
-
 def non_rectangular_convolution_rectangle(
         list1: List[int], list2: List[int], geometry: List[Tuple[float,
         float]],
@@ -235,7 +226,6 @@ def non_rectangular_convolution_rectangle(
     return sympy.discrete.convolutions.convolution_ntt(
         list1[x_min:x_max + 1], list2[y_min:y_max + 1],
         ntt_prime), conv_min
-
 
 def non_rectangular_convolution_triangle_axis_aligned(
         list1: List[int], list2: List[int], geometry: List[Tuple[float,
@@ -322,7 +312,6 @@ def non_rectangular_convolution_triangle_axis_aligned(
 
     return conv, conv_min
 
-
 def non_rectangular_convolution_triangle(
         list1: List[int], list2: List[int], geometry: List[Tuple[float,
         float]],
@@ -343,7 +332,6 @@ def non_rectangular_convolution_triangle(
         
         Second, the offset of the first index of the convolution.
     """
-
     A, B, C = geometry[0], geometry[1], geometry[2]
     x_min, y_min, x_max, y_max = rectangle_inscribed([A, B, C])
     conv_size, conv_min = retrieve_convolution_size([A, B, C])
@@ -415,134 +403,75 @@ def non_rectangular_convolution_triangle(
                      sub_third_triangle, add_hypotenuse_edge]
 
         # Case 2.1: Two vertices are on the same edge of the surrounding rectangle.
-        # Summation the convolutions for Case 2.1:
-        # Add rectangle.
-        # Subtract first triangle.
-        # Add edge between given triangle and first triangle, which was wrongly subtracted.
-        # Subtract second triangle.
-        # Add edge between given triangle and second triangle, which was wrongly subtracted.
         else:
-            # Case 2.1.1: Vertical edge.
+            # calculate base point on the common edge
             if vertex_collisions[0][0] == vertex_collisions[1][0]:
-                steps = [
-                    ConvolutionStep(
-                        geometry=[(x_min, y_min), (x_max, y_max)],
-                        function=non_rectangular_convolution_rectangle,
-                        is_positive=True
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_min, y_min), (x_max, y_min), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_triangle_axis_aligned,
-                        is_positive=False
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_min + x_max - vertex_non_collisions[0][0], y_min), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_edge,
-                        is_positive=True
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_min, y_max), (x_max, y_max), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_triangle_axis_aligned,
-                        is_positive=False
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_min + x_max - vertex_non_collisions[0][0], y_max), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_edge,
-                        is_positive=True
-                    )
-                ]
-            # Case 2.1.2: Horizontal edge.
+                base_point = (vertex_collisions[0][0], vertex_non_collisions[0][1])
             else:
-                steps = [
-                    ConvolutionStep(
-                        geometry=[(x_min, y_min), (x_max, y_max)],
-                        function=non_rectangular_convolution_rectangle,
-                        is_positive=True
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_min, y_min), (x_min, y_max), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_triangle_axis_aligned,
-                        is_positive=False
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_min, y_min + y_max - vertex_non_collisions[0][1]), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_edge,
-                        is_positive=True
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_max, y_min), (x_max, y_max), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_triangle_axis_aligned,
-                        is_positive=False
-                    ),
-                    ConvolutionStep(
-                        geometry=[(x_max, y_min + y_max - vertex_non_collisions[0][1]), vertex_non_collisions[0]],
-                        function=non_rectangular_convolution_edge,
-                        is_positive=True
-                    )
-                ]
+                base_point = (vertex_non_collisions[0][0], vertex_collisions[0][1])
+
+            add_first_triangle = ConvolutionStep(
+                geometry=[vertex_collisions[0], base_point, vertex_non_collisions[0]],
+                function=non_rectangular_convolution_triangle_axis_aligned,
+                is_positive=True)
+            add_second_triangle = ConvolutionStep(
+                geometry=[vertex_collisions[1], base_point, vertex_non_collisions[0]],
+                function=non_rectangular_convolution_triangle_axis_aligned,
+                is_positive=True)
+            sub_common_edge = ConvolutionStep(
+                geometry=[base_point, vertex_non_collisions[0]],
+                function=non_rectangular_convolution_edge,
+                is_positive=False)
+
+            steps = [add_first_triangle, add_second_triangle, sub_common_edge]
 
         conv, conv_min = add_convolution(list1, list2, conv, conv_min, steps, ntt_prime)
 
         return conv, conv_min
 
     # Case 2.2: Only one vertex of the triangle coincides with the surrounding rectangle.
-    # Switch non_collision-vertices such that the first is horizontally opposed to vertex_collisions.
-    # Summation the convolutions for Case 2.2:
-    # Add rectangle.
-    # Subtract first triangle.
-    # Add edge between given triangle and first triangle, which was wrongly subtracted.
-    # Subtract second triangle.
-    # Add edge between given triangle and second triangle, which was wrongly subtracted.
-    # Subtract third triangle.
-    # Add edge between given triangle and third triangle, which was wrongly subtracted.
-    if vertex_non_collisions[0][0] != x_max + x_min - vertex_collisions[0][0]:
-        vertex_non_collisions[0], vertex_non_collisions[1] = vertex_non_collisions[1], vertex_non_collisions[0]
+    opposite_collision = (x_min + x_max - vertex_collisions[0][0], y_min + y_max - vertex_collisions[0][1])
 
-    steps = [
-        ConvolutionStep(
-            geometry=[(x_min, y_min), (x_max, y_max)],
-            function=non_rectangular_convolution_rectangle,
-            is_positive=True
-        ),
-        ConvolutionStep(
-            geometry=[vertex_collisions[0], (vertex_non_collisions[0][0], vertex_collisions[0][1]),
-                      vertex_non_collisions[0]],
-            function=non_rectangular_convolution_triangle_axis_aligned,
-            is_positive=False
-        ),
-        ConvolutionStep(
-            geometry=[vertex_collisions[0], vertex_non_collisions[0]],
-            function=non_rectangular_convolution_edge,
-            is_positive=True
-        ),
-        ConvolutionStep(
-            geometry=[vertex_collisions[0], (vertex_collisions[0][0], vertex_non_collisions[1][1]),
-                      vertex_non_collisions[1]],
-            function=non_rectangular_convolution_triangle_axis_aligned,
-            is_positive=False
-        ),
-        ConvolutionStep(
-            geometry=[vertex_collisions[0], vertex_non_collisions[1]],
-            function=non_rectangular_convolution_edge,
-            is_positive=True
-        ),
-        ConvolutionStep(
-            geometry=[(x_min + x_max - vertex_collisions[0][0], y_min + y_max - vertex_collisions[0][1]),
-                      vertex_non_collisions[0], vertex_non_collisions[1]],
-            function=non_rectangular_convolution_triangle_axis_aligned,
-            is_positive=False
-        ),
-        ConvolutionStep(
-            geometry=[vertex_non_collisions[0], vertex_non_collisions[1]],
-            function=non_rectangular_convolution_edge,
-            is_positive=True
-        )
-    ]
+    corner0 = opposing_rect_vertex(vertex_non_collisions[1], vertex_collisions[0], opposite_collision)
+    corner1 = opposing_rect_vertex(vertex_non_collisions[0], vertex_collisions[0], opposite_collision)
+
+    add_rectangle = ConvolutionStep(
+        geometry=[vertex_collisions[0], opposite_collision],
+        function=non_rectangular_convolution_rectangle,
+        is_positive=True)
+    sub_first_triangle = ConvolutionStep(
+        geometry=[vertex_collisions[0], corner0, vertex_non_collisions[0]],
+        function=non_rectangular_convolution_triangle_axis_aligned,
+        is_positive=False)
+    add_first_edge = ConvolutionStep(
+        geometry=[vertex_collisions[0], vertex_non_collisions[0]],
+        function=non_rectangular_convolution_edge,
+        is_positive=True)
+    sub_second_triangle = ConvolutionStep(
+        geometry=[vertex_collisions[0], corner1, vertex_non_collisions[1]],
+        function=non_rectangular_convolution_triangle_axis_aligned,
+        is_positive=False)
+    add_second_edge = ConvolutionStep(
+        geometry=[vertex_collisions[0], vertex_non_collisions[1]],
+        function=non_rectangular_convolution_edge,
+        is_positive=True)
+    sub_third_triangle = ConvolutionStep(
+        geometry=[opposite_collision, vertex_non_collisions[0], vertex_non_collisions[1]],
+        function=non_rectangular_convolution_triangle_axis_aligned,
+        is_positive=False)
+    add_third_edge = ConvolutionStep(
+        geometry=[vertex_non_collisions[0], vertex_non_collisions[1]],
+        function=non_rectangular_convolution_edge,
+        is_positive=True)
+
+    steps = [add_rectangle,
+             sub_first_triangle, add_first_edge,
+             sub_second_triangle, add_second_edge,
+             sub_third_triangle, add_third_edge]
 
     conv, conv_min = add_convolution(list1, list2, conv, conv_min, steps, ntt_prime)
 
     return conv, conv_min
-
 
 def non_rectangular_convolution_convex_polygon(
         list1: List[int], list2: List[int], geometry: List[Tuple[float,
