@@ -8,26 +8,26 @@ from typing import List, Tuple, Callable
 
 import sympy
 
+Point = Tuple[float, float]
 
 @dataclass
 class ConvolutionStep:
-    geometry: List[Tuple[float, float]]
-    function: Callable[[List[int], List[int], List[Tuple[float, float]], int], Tuple[List[int], int]]
+    geometry: List[Point]
+    function: Callable[[List[int], List[int], List[Point], int], Tuple[List[int], int]]
     is_positive: bool  # True for addition, False for subtraction
-
 
 def is_integer(number: float) -> bool:
     """Checks if number is an integer"""
     return number == ceil(number)
 
 
-def rectangle_inscribed_int(coordinates: List[Tuple[float, float]]) -> Tuple[int, int, int, int]:
+def rectangle_inscribed_int(coordinates: List[Point]) -> Tuple[int, int, int, int]:
     """Retrieves bounds for the minimal and maximal integer coordinates of the given polygon"""
     x_min, y_min, x_max, y_max = rectangle_inscribed(coordinates)
     return ceil(x_min), ceil(y_min), floor(x_max), floor(y_max)
 
 
-def rectangle_inscribed(coordinates: List[Tuple[float, float]]) -> Tuple[float, float, float, float]:
+def rectangle_inscribed(coordinates: List[Point]) -> Tuple[float, float, float, float]:
     """Retrieves bounds for the minimal and maximal coordinates of the given polygon"""
     x_min = min([coordinate[0] for coordinate in coordinates])
     y_min = min([coordinate[1] for coordinate in coordinates])
@@ -36,7 +36,7 @@ def rectangle_inscribed(coordinates: List[Tuple[float, float]]) -> Tuple[float, 
     return x_min, y_min, x_max, y_max
 
 
-def retrieve_convolution_size(coordinates: List[Tuple[float, float]]) -> Tuple[int, int]:
+def retrieve_convolution_size(coordinates: List[Point]) -> Tuple[int, int]:
     """Retrieves bounds for the size and the starting index of the convolved sequence with given polygon"""
     x_min, y_min, x_max, y_max = rectangle_inscribed_int(coordinates)
     conv_min, conv_max = x_min + y_min, x_max + y_max
@@ -46,6 +46,47 @@ def retrieve_convolution_size(coordinates: List[Tuple[float, float]]) -> Tuple[i
         conv_size = conv_max - conv_min + 1
     return conv_size, conv_min
 
+
+def closer_point(reference: Point, option_a: Point, option_b: Point) -> Point:
+    """
+    Returns the point closer to the reference.
+
+    Args:
+        reference (Point): The reference point (X).
+        option_a (Point): First candidate point (Y).
+        option_b (Point): Second candidate point (Z).
+
+    Returns:
+        Point: The closer point (option_a or option_b).
+    """
+    a_squared_distance = sum((ref - a) ** 2 for ref, a in zip(reference, option_a))
+    b_squared_distance = sum((ref - b) ** 2 for ref, b in zip(reference, option_b))
+    return option_a if a_squared_distance <= b_squared_distance else option_b
+
+
+def opposing_rect_vertex(reference: Point, diag_start: Point, diag_end: Point) -> Point:
+    """Determines the opposite rectangle vertex relative to the reference point.
+
+    Given two diagonally opposite corners of an axis-aligned rectangle (`diag_start`, `diag_end`),
+    this function determines which of the remaining two rectangle vertices is on the opposing site
+    of the diagonal as the `reference` point.
+
+    Args:
+        reference (Point): The point to compare.
+        diag_start (Point): One of the diagonally opposite rectangle corners.
+        diag_end (Point): The other diagonally opposite rectangle corner.
+
+    Returns:
+        Point: The rectangle corner on the opposing side of the diagonal as `reference`.
+
+    Example:
+        >>> opposing_rect_vertex((9, 0), (0, 0), (10, 1))
+        (0, 1)
+    """
+    other_a, other_b = (diag_end[0], diag_start[1]), (diag_start[0], diag_end[1])
+    weight_ax, weight_ay = abs(other_a[0] - diag_start[0]), abs(other_a[1] - diag_end[1])
+    part_ax, part_ay = abs(other_a[0] - reference[0]), abs(other_a[1] - reference[1])
+    return other_a if (part_ax / weight_ax) + (part_ay / weight_ay) > 1 else other_b
 
 def add_subslice(main: Tuple[List[int], int], sub: Tuple[List[int], int]) -> Tuple[List[int], int]:
     """Calculates the sum of two slices main and sub with offsets
@@ -109,14 +150,14 @@ def add_convolution(
 
 
 def non_rectangular_convolution_edge(list1: List[int], list2: List[int],
-                                     geometry: List[Tuple[float, float]],
+                                     geometry: List[Point],
                                      _ntt_prime: int) -> Tuple[List[int], int]:
     """Non-Rectangular Convolution -- Base Case 1: Single edges.
 
     Args:
         list1 (List[int]): The first list.
         list2 (List[int]): The second list.
-        geometry (List[Tuple[float, float]]): Two opposing vertices
+        geometry (List[Point]): Two opposing vertices
             of the underlying edge.
         _ntt_prime (int): The prime for the number theoretic transform (unused since there is no "real" convolution).
 
@@ -173,7 +214,7 @@ def non_rectangular_convolution_rectangle(
     Args:
         list1 (List[int]): The first list.
         list2 (List[int]): The second list.
-        geometry (List[Tuple[float, float]]): Two opposing vertices
+        geometry (List[Point]): Two opposing vertices
             of the underlying rectangle.
         ntt_prime (int): The prime for the number theoretic transform.
 
@@ -206,7 +247,7 @@ def non_rectangular_convolution_triangle_axis_aligned(
     Args:
         list1 (List[int]): The first list.
         list2 (List[int]): The second list.
-        geometry (List[Tuple[float, float]]): The three vertices defining the
+        geometry (List[Point]): The three vertices defining the
             underlying triangle.
         ntt_prime (int): The prime for the number theoretic transform.
 
@@ -292,7 +333,7 @@ def non_rectangular_convolution_triangle(
     Args:
         list1 (List[int]): The first list.
         list2 (List[int]): The second list.
-        geometry (List[Tuple[float, float]]): The three vertices defining the
+        geometry (List[Point]): The three vertices defining the
             underlying triangle.
         ntt_prime (int): The prime for the number theoretic transform.
 
@@ -328,179 +369,50 @@ def non_rectangular_convolution_triangle(
 
     if len(vertex_collisions) == 2:
         # Lemma 12, Case 1: Two vertices are on opposing vertices of the surrounding rectangle.
-        # Summation for Case 1:
-        # Add rectangle.
-        # Add first triangle.
-        # Subtract edge between rectangle and first triangle, which was counted twice.
-        # Add second triangle.
-        # Subtract edge between rectangle and second triangle, which was counted twice.
-        # Subtract third triangle.
-        # Add hypotenuse of the third triangle, which was wrongly subtracted.
         if (vertex_collisions[0][0] != vertex_collisions[1][0]) and (
                 vertex_collisions[0][1] != vertex_collisions[1][1]):
-            # Case 1.1: x_min/y_min -- x_max/y_max.
-            if ((x_min == vertex_collisions[0][0] and y_min == vertex_collisions[0][1])
-                    or (x_max == vertex_collisions[0][0] and y_max == vertex_collisions[0][1])):
-                # Case 1.1.1: Third vertex in the bottom right.
-                if ((abs(vertex_non_collisions[0][0] - x_min) / (x_max - x_min))
-                        + (abs(vertex_non_collisions[0][1] - y_max) / (y_max - y_min)) > 1):
-                    steps = [
-                        ConvolutionStep(
-                            geometry=[vertex_non_collisions[0], (x_min, y_max)],
-                            function=non_rectangular_convolution_rectangle,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, vertex_non_collisions[0][1]), (x_min, y_min), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, vertex_non_collisions[0][1]), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_max, y_max), (vertex_non_collisions[0][0], y_max), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(vertex_non_collisions[0][0], y_max), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_max), (x_min, y_min), (x_max, y_max)],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_min), (x_max, y_max)],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=True
-                        )
-                    ]
-                # Case 1.1.2: Third vertex in the top left.
-                else:
-                    steps = [
-                        ConvolutionStep(
-                            geometry=[vertex_non_collisions[0], (x_max, y_min)],
-                            function=non_rectangular_convolution_rectangle,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_max, vertex_non_collisions[0][1]), (x_max, y_max), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_max, vertex_non_collisions[0][1]), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_min), (vertex_non_collisions[0][0], y_min), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(vertex_non_collisions[0][0], y_min), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_max, y_min), (x_min, y_min), (x_max, y_max)],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_min), (x_max, y_max)],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=True
-                        )
-                    ]
-            # Case 1.2: x_min/y_min -- x_max/y_max.
-            else:
-                # Case 1.2.1: Third vertex in the top right.
-                if ((abs(vertex_non_collisions[0][0] - x_min) / (x_max - x_min))
-                        + (abs(vertex_non_collisions[0][1] - y_min) / (y_max - y_min)) > 1):
-                    steps = [
-                        ConvolutionStep(
-                            geometry=[vertex_non_collisions[0], (x_min, y_min)],
-                            function=non_rectangular_convolution_rectangle,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, vertex_non_collisions[0][1]), (x_min, y_max), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, vertex_non_collisions[0][1]), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_max, y_min), (vertex_non_collisions[0][0], y_min), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(vertex_non_collisions[0][0], y_min), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_max), (x_min, y_min), (x_max, y_min)],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_max), (x_max, y_min)],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=True
-                        )
-                    ]
-                # Case 1.2.2: Third vertex in the bottom left.
-                else:
-                    steps = [
-                        ConvolutionStep(
-                            geometry=[vertex_non_collisions[0], (x_max, y_max)],
-                            function=non_rectangular_convolution_rectangle,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_max, vertex_non_collisions[0][1]), (x_max, y_min), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_max, vertex_non_collisions[0][1]), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_max), (vertex_non_collisions[0][0], y_max), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=True
-                        ),
-                        ConvolutionStep(
-                            geometry=[(vertex_non_collisions[0][0], y_max), vertex_non_collisions[0]],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_max), (x_max, y_max), (x_max, y_min)],
-                            function=non_rectangular_convolution_triangle_axis_aligned,
-                            is_positive=False
-                        ),
-                        ConvolutionStep(
-                            geometry=[(x_min, y_max), (x_max, y_min)],
-                            function=non_rectangular_convolution_edge,
-                            is_positive=True
-                        )
-                    ]
+            # Compute the key geometry components dynamically
+            quart = opposing_rect_vertex(vertex_non_collisions[0], vertex_collisions[0], vertex_collisions[1])
+            base_points = [(vertex_non_collisions[0][0], quart[1]), (quart[0], vertex_non_collisions[0][1])]
+
+            # Ensure base_point[i] is closest to vertex_collisions[i]
+            base_points = [closer_point(vc, base_points[0], base_points[1]) for vc in vertex_collisions]
+
+            # Define convolution operations
+            add_rectangle = ConvolutionStep(
+                geometry=[vertex_non_collisions[0], quart],
+                function=non_rectangular_convolution_rectangle,
+                is_positive=True)
+            add_first_triangle = ConvolutionStep(
+                geometry=[vertex_collisions[0], base_points[0], vertex_non_collisions[0]],
+                function=non_rectangular_convolution_triangle_axis_aligned,
+                is_positive=True)
+            sub_first_edge = ConvolutionStep(
+                geometry=[base_points[0], vertex_non_collisions[0]],
+                function=non_rectangular_convolution_edge,
+                is_positive=False)
+            add_second_triangle = ConvolutionStep(
+                geometry=[vertex_collisions[1], base_points[1], vertex_non_collisions[0]],
+                function=non_rectangular_convolution_triangle_axis_aligned,
+                is_positive=True)
+            sub_second_edge = ConvolutionStep(
+                geometry=[base_points[1], vertex_non_collisions[0]],
+                function=non_rectangular_convolution_edge,
+                is_positive=False)
+            sub_third_triangle = ConvolutionStep(
+                geometry=[vertex_collisions[0], vertex_collisions[1], quart],
+                function=non_rectangular_convolution_triangle_axis_aligned,
+                is_positive=False)
+            add_hypotenuse_edge = ConvolutionStep(
+                geometry=[vertex_collisions[0], vertex_collisions[1]],
+                function=non_rectangular_convolution_edge,
+                is_positive=True)
+
+            # Store in steps list
+            steps = [add_rectangle,
+                     add_first_triangle, sub_first_edge,
+                     add_second_triangle, sub_second_edge,
+                     sub_third_triangle, add_hypotenuse_edge]
 
         # Case 2.1: Two vertices are on the same edge of the surrounding rectangle.
         # Summation the convolutions for Case 2.1:
@@ -642,7 +554,7 @@ def non_rectangular_convolution_convex_polygon(
     Args:
         list1 (List[int]): The first list.
         list2 (List[int]): The second list.
-        geometry (List[Tuple[float, float]]): The vertices defining the
+        geometry (List[Point]): The vertices defining the
             underlying polygon.
         ntt_prime (int): The prime for the number theoretic transform.
 
