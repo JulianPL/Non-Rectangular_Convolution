@@ -3,9 +3,9 @@
 """
 
 from dataclasses import dataclass
+from fractions import Fraction
 from math import ceil
 from typing import List, Tuple, Callable
-from fractions import Fraction
 
 import sympy
 

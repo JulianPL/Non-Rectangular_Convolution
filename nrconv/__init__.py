@@ -2,3 +2,4 @@
 
 from .primes import *
 from .convolution import *
+from .geometry import *
